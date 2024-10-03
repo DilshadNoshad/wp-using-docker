@@ -1,0 +1,37 @@
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: wordpress         # Root password for MySQL
+      MYSQL_DATABASE: wordpress               # Default database name
+      MYSQL_USER: wordpress                   # Database username
+      MYSQL_PASSWORD: wordpress               # Password for the database user
+    restart: always                           # Always restart the container on failure
+    volumes:
+      - ./db_data:/var/lib/mysql              # Persist MySQL data on the host
+
+  phpmyadmin:
+    depends_on:
+      - db                                    # Ensure db service is started before phpMyAdmin
+    image: phpmyadmin
+    environment:
+      PMA_HOST: db                           # MySQL host for phpMyAdmin to connect to
+      MYSQL_ROOT_PASSWORD: wordpress          # Root password for MySQL
+    restart: always                           # Automatically restart phpMyAdmin on failure
+    ports:
+      - "8084:80"                             # Access phpMyAdmin at http://localhost:8084
+
+  wordpress:
+    depends_on:
+      - db                                    # Ensure db service is started before WordPress
+    image: wordpress:latest
+    environment:
+      WORDPRESS_DB_HOST: db:3306             # Database host and port for WordPress
+      WORDPRESS_DB_USER: wordpress            # Database username
+      WORDPRESS_DB_PASSWORD: wordpress        # Password for the database user
+      WORDPRESS_DB_NAME: wordpress            # Database name for WordPress
+    volumes:
+      - ./wp-content:/var/www/html/wp-content # Mount only wp-content for faster performance
+      - ./uploads.ini:/usr/local/etc/php/conf.d/uploads.ini # Custom PHP configuration for file uploads
+    ports:
+      - "8083:80"                             # Access WordPress at http://localhost:8083
